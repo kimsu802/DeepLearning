@@ -14,7 +14,6 @@ import base64
 import io
 import plotly.express as px
 
-# 모델 정의
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -34,7 +33,7 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
-# 이미지 전처리 함수 정의
+
 def preprocess_image(image):
     transform = transforms.Compose([
         transforms.Resize((32, 32)),
@@ -43,23 +42,23 @@ def preprocess_image(image):
     ])
     return transform(image).unsqueeze(0)
 
-# 모델 불러오기
+
 net = Net()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 net.to(device)
 
-# 학습된 모델 불러오기
+
 PATH = "model.pth"  # 모델의 경로
 net.load_state_dict(torch.load(PATH))
 net.eval()
 
-# 클래스 레이블 정의
+
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-# Dash 앱 생성
+
 app = dash.Dash(__name__)
 
-# 이미지 업로드 및 결과 출력 레이아웃
+
 app.layout = html.Div([
 
     html.H1(children='이미지 업로드를 통한 이미지 분류'),
@@ -86,7 +85,7 @@ app.layout = html.Div([
     html.Div(id='output-accuracy')
 ])
 
-# 이미지 업로드 콜백 함수
+
 @app.callback(
     [Output('output-image-upload', 'children'), Output('output-accuracy', 'children')],
     [Input('upload-image', 'contents')],
@@ -99,23 +98,23 @@ def update_output(contents, filename):
         decoded = base64.b64decode(content_string)
         image = Image.open(io.BytesIO(decoded))
 
-        # 이미지 전처리
+      
         processed_image = preprocess_image(image)
         processed_image = processed_image.to(device)
 
-        # 예측
+      
         outputs = net(processed_image)
         _, predicted = torch.max(outputs, 1)
         prediction = classes[predicted.item()]
 
-        # 예측 결과 출력
+       
         result_div = html.Div([
             html.H3('업로드된 이미지:'),
             html.Img(src=contents, style={'height': '300px'}),
             html.H3('예측 이미지는: {}'.format(prediction))
         ])
 
-        # 클래스별 정확도 계산
+       
         probabilities = F.softmax(outputs, dim=1)[0].cpu().detach().numpy()
         accuracy_div = html.Div([
             html.H3('각 클래스 별 정확도 :')
@@ -125,7 +124,7 @@ def update_output(contents, filename):
             accuracy_text = f'{class_name}: {accuracy:.4f}'
             accuracy_div.children.append(html.P(accuracy_text))
 
-        # 클래스별 정확도 그래프
+       
         data = {
             'Class': classes,
             'Accuracy': probabilities
